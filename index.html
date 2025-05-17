@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Luxury-Profile-Card</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    :root {
+      --platinum: #e5e4e2;
+      --gold: #ffd700;
+      --rose-gold: #b76e79;
+      --diamond: #b9f2ff;
+      --onyx: #0a0a0a;
+      --carbon: #1a1a1a;
+      --silk: #f5f5f5;
+      
+      /* Responsive size variables */
+      --card-width: min(90vw, 420px);
+      --avatar-size: clamp(70px, 22vw, 130px);
+      --font-scale: calc(0.4vw + 0.8rem);
+      --cube-size: clamp(30px, 8vw, 50px);
+      --shadow-intensity: clamp(15px, 4vw, 30px);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-family: 'Montserrat', sans-serif;
+      background: radial-gradient(circle at center, #050505 0%, #000 100%);
+      color: var(--silk);
+      touch-action: manipulation;
+    }
+
+    #three-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.7;
+    }
+
+    .card-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: var(--card-width);
+      perspective: 2000px;
+    }
+
+    .luxury-card {
+      width: 100%;
+      height: auto;
+      background: linear-gradient(145deg, rgba(26, 26, 26, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%);
+      border-radius: clamp(16px, 4vw, 24px);
+      box-shadow: 
+        0 0 var(--shadow-intensity) rgba(255, 215, 0, 0.3),
+        inset 0 0 var(--shadow-intensity) rgba(255, 215, 0, 0.2);
+      padding: clamp(1rem, 3vw, 2rem);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .luxury-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        to bottom right,
+        transparent 45%,
+        rgba(255, 215, 0, 0.1) 50%,
+        transparent 55%
+      );
+      transform: rotate(30deg);
+      animation: shine 6s infinite;
+    }
+
+    @keyframes shine {
+      0% { transform: rotate(30deg) translate(-30%, -30%); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: rotate(30deg) translate(30%, 30%); opacity: 0; }
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: clamp(1rem, 3vw, 1.5rem);
+      position: relative;
+      z-index: 2;
+    }
+
+    .diamond-avatar {
+      width: var(--avatar-size);
+      height: var(--avatar-size);
+      margin: 0 auto clamp(0.5rem, 2vw, 1rem);
+      border-radius: 50%;
+      border: clamp(3px, 1vw, 4px) solid var(--gold);
+      box-shadow: 
+        0 0 var(--shadow-intensity) rgba(183, 110, 121, 0.6),
+        inset 0 0 var(--shadow-intensity) rgba(255, 215, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .diamond-avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        to bottom right,
+        transparent 45%,
+        rgba(255, 215, 0, 0.2) 50%,
+        transparent 55%
+      );
+      transform: rotate(30deg);
+      animation: shine 8s infinite;
+      animation-delay: 1s;
+    }
+
+    .diamond-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      filter: drop-shadow(0 0 clamp(5px, 2vw, 10px) rgba(0, 0, 0, 0.5));
+    }
+
+    .card-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.5rem, 6vw, 2.2rem);
+      color: var(--gold);
+      margin-bottom: clamp(0.3rem, 1vw, 0.5rem);
+      text-shadow: 0 0 clamp(8px, 3vw, 15px) rgba(255, 215, 0, 0.4);
+      letter-spacing: clamp(0.5px, 0.2vw, 1px);
+      position: relative;
+      display: inline-block;
+    }
+
+    .card-header h1::after {
+      content: '';
+      position: absolute;
+      bottom: clamp(-3px, -0.5vw, -5px);
+      left: 0;
+      width: 100%;
+      height: clamp(1px, 0.3vw, 2px);
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .card-header p {
+      font-style: italic;
+      color: var(--platinum);
+      opacity: 0.8;
+      font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+      line-height: 1.4;
+    }
+
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: clamp(0.8rem, 3vw, 1.5rem);
+      margin-top: clamp(1rem, 4vw, 2.5rem);
+    }
+
+    .social-cube {
+      aspect-ratio: 1;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      cursor: pointer;
+      -webkit-touch-callout: none;
+    }
+
+    .social-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(145deg, rgba(26, 26, 26, 0.8) 0%, rgba(10, 10, 10, 0.9) 100%);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      box-shadow: 
+        inset 0 0 var(--shadow-intensity) rgba(255, 215, 0, 0.2),
+        0 0 var(--shadow-intensity) rgba(0, 0, 0, 0.5);
+      border-radius: clamp(8px, 2vw, 12px);
+      padding: clamp(0.6rem, 2vw, 1rem);
+      transition: all 0.6s ease;
+      backface-visibility: hidden;
+    }
+
+    .social-face i {
+      font-size: clamp(1.5rem, 6vw, 2.2rem);
+      margin-bottom: clamp(0.3rem, 1vw, 0.5rem);
+      color: var(--gold);
+      transition: all 0.4s ease;
+    }
+
+    .social-face h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+      color: var(--platinum);
+      margin-bottom: clamp(0.2rem, 0.8vw, 0.3rem);
+      text-align: center;
+    }
+
+    .social-face p {
+      font-size: clamp(0.7rem, 2.8vw, 0.9rem);
+      color: var(--silk);
+      opacity: 0.7;
+      text-align: center;
+    }
+
+    .social-face.front {
+      transform: translateZ(var(--cube-size));
+    }
+
+    .social-face.back {
+      transform: translateZ(calc(-1 * var(--cube-size))) rotateY(180deg);
+    }
+
+    .social-face.right {
+      transform: translateX(var(--cube-size)) rotateY(90deg);
+    }
+
+    .social-face.left {
+      transform: translateX(calc(-1 * var(--cube-size))) rotateY(-90deg);
+    }
+
+    .social-face.top {
+      transform: translateY(calc(-1 * var(--cube-size))) rotateX(90deg);
+    }
+
+    .social-face.bottom {
+      transform: translateY(var(--cube-size)) rotateX(-90deg);
+    }
+
+    .social-cube:hover {
+      transform: scale(1.05);
+    }
+
+    .social-cube:hover .social-face {
+      box-shadow: 
+        inset 0 0 calc(var(--shadow-intensity) * 1.2) rgba(255, 215, 0, 0.3),
+        0 0 calc(var(--shadow-intensity) * 1.2) rgba(255, 215, 0, 0.4);
+    }
+
+    .social-cube:hover .social-face i {
+      transform: scale(1.2);
+      color: var(--diamond);
+      text-shadow: 0 0 clamp(8px, 3vw, 15px) var(--diamond);
+    }
+
+    .diamond-particle {
+      position: absolute;
+      width: clamp(4px, 2vw, 8px);
+      height: clamp(4px, 2vw, 8px);
+      background: var(--diamond);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      filter: drop-shadow(0 0 clamp(3px, 1vw, 5px) var(--diamond));
+    }
+
+    /* ============================================== */
+    /* Comprehensive Responsive Media Query Framework */
+    /* ============================================== */
+
+    /* Extra Large Screens (4K and beyond) */
+    @media (min-width: 1921px) {
+      :root {
+        --card-width: min(60vw, 500px);
+        --avatar-size: 160px;
+      }
+      
+      .luxury-card {
+        padding: 2.5rem;
+      }
+      
+      .social-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* Large Desktop Screens (1440px - 1920px) */
+    @media (min-width: 1440px) and (max-width: 1920px) {
+      :root {
+        --card-width: min(70vw, 400px);
+      }
+    }
+
+    /* Standard Desktop/Laptop (1024px - 1439px) */
+    @media (min-width: 1024px) and (max-width: 1439px) {
+      :root {
+        --card-width: min(80vw, 375px);
+      }
+    }
+
+    /* Small Desktop/Tablet Landscape (768px - 1023px) */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      :root {
+        --card-width: min(85vw, 400px);
+        --avatar-size: clamp(90px, 20vw, 100px);
+      }
+      
+      .social-grid {
+        gap: 1.2rem;
+      }
+    }
+
+    /* Tablet Portrait (600px - 767px) */
+    @media (min-width: 600px) and (max-width: 767px) {
+      :root {
+        --avatar-size: clamp(85px, 18vw, 110px);
+      }
+      
+      .luxury-card {
+        padding: 1.2rem;
+      }
+    }
+
+    /* Large Mobile (481px - 599px) */
+    @media (min-width: 481px) and (max-width: 599px) {
+      :root {
+        --avatar-size: clamp(80px, 16vw, 100px);
+      }
+      
+      .card-header h1 {
+        font-size: clamp(1.4rem, 5vw, 1.8rem);
+      }
+    }
+
+    /* Medium Mobile (400px - 480px) */
+    @media (min-width: 400px) and (max-width: 480px) {
+      :root {
+        --card-width: 75vw;
+      }
+      
+      .social-grid {
+        gap: 1rem;
+      }
+    }
+
+    /* Small Mobile (360px - 399px) */
+    @media (min-width: 360px) and (max-width: 399px) {
+      :root {
+        --card-width: 70vw;
+        --avatar-size: 75px;
+      }
+      
+      .luxury-card {
+        border-radius: 14px;
+      }
+      
+      .social-face {
+        padding: 0.5rem;
+      }
+    }
+
+    /* Micro Screens (below 360px) */
+    @media (max-width: 359px) {
+      :root {
+        --card-width: 92vw;
+        --avatar-size: 70px;
+        --cube-size: 25px;
+      }
+      
+      .luxury-card {
+        padding: 0.8rem;
+        border-radius: 12px;
+      }
+      
+      .card-header h1 {
+        font-size: 1.3rem;
+      }
+      
+      .card-header p {
+        font-size: 0.8rem;
+      }
+      
+      .social-face {
+        border-radius: 8px;
+        padding: 0.4rem;
+      }
+      
+      .social-face i {
+        font-size: 1.3rem;
+      }
+      
+      .social-face h3 {
+        font-size: 0.8rem;
+      }
+      
+      .social-face p {
+        font-size: 0.65rem;
+      }
+    }
+
+    /* Touch Device Adaptation */
+    @media (hover: none) {
+      .social-cube {
+        transform-style: flat;
+      }
+      
+      .social-face {
+        position: relative;
+        transform: none !important;
+        margin-bottom: 1px;
+      }
+      
+      .social-face:not(.front) {
+        display: none;
+      }
+      
+      .social-cube:hover {
+        transform: none;
+      }
+      
+      .luxury-card::before, .diamond-avatar::before {
+        animation: none;
+      }
+    }
+
+    /* Performance Optimizations */
+    @media (prefers-reduced-motion: reduce) {
+      .luxury-card {
+        animation: none;
+      }
+      
+      .diamond-avatar::before, .luxury-card::before {
+        animation: none;
+        display: none;
+      }
+    }
+
+    /* 3D Floating Animation */
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotateX(0) rotateY(0); }
+      25% { transform: translateY(clamp(-10px, -1vw, -20px)) rotateX(5deg) rotateY(5deg); }
+      50% { transform: translateY(0) rotateX(0) rotateY(10deg); }
+      75% { transform: translateY(clamp(-5px, -0.5vw, -10px)) rotateX(-5deg) rotateY(-5deg); }
+    }
+
+    .luxury-card {
+      animation: float 8s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <div id="three-container"></div>
+  <div id="root"></div>
+  
+  <script>
+    'use strict';
+
+    // Initialize Three.js background (optimized version)
+    const initThreeJS = () => {
+      // Skip on very small or low-performance devices
+      if (window.innerWidth < 400 || window.innerHeight < 500 || 
+          navigator.hardwareConcurrency < 2 || 
+          !navigator.gpu) {
+        document.getElementById('three-container').style.display = 'none';
+        return;
+      }
+
+      try {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        // Adjust renderer quality based on device
+        const renderer = new THREE.WebGLRenderer({ 
+          alpha: true, 
+          antialias: window.devicePixelRatio < 2,
+          powerPreference: window.innerWidth > 1024 ? "high-performance" : "low-power"
+        });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        document.getElementById('three-container').appendChild(renderer.domElement);
+
+        // Adaptive geometry complexity
+        const geometry = window.innerWidth < 768 ? 
+          new THREE.IcosahedronGeometry(0.4, 1) : 
+          new THREE.OctahedronGeometry(0.5, window.innerWidth > 1440 ? 1 : 0);
+          
+        const material = new THREE.MeshPhongMaterial({
+          color: 0xb9f2ff,
+          emissive: 0x0,
+          specular: 0xffffff,
+          shininess: window.innerWidth > 768 ? 100 : 50,
+          transparent: true,
+          opacity: window.innerWidth > 768 ? 0.8 : 0.6
+        });
+
+        const particles = [];
+        const particleCount = Math.min(
+          Math.floor(window.innerWidth * window.innerHeight / 20000),
+          40
+        );
+        
+        for (let i = 0; i < particleCount; i++) {
+          const particle = new THREE.Mesh(geometry, material);
+          particle.position.x = Math.random() * 20 - 10;
+          particle.position.y = Math.random() * 20 - 10;
+          particle.position.z = Math.random() * 20 - 10;
+          particle.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+          particle.scale.set(0.5, 0.5, 0.5);
+          particles.push(particle);
+          scene.add(particle);
+        }
+
+        // Adaptive lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, window.innerWidth > 768 ? 0.5 : 0.3);
+        scene.add(ambientLight);
+
+        if (window.innerWidth > 768) {
+          const directionalLight = new THREE.DirectionalLight(0xffd700, 0.8);
+          directionalLight.position.set(1, 1, 1);
+          scene.add(directionalLight);
+        }
+
+        const pointLight = new THREE.PointLight(0xb76e79, window.innerWidth > 768 ? 1 : 0.7, 50);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        camera.position.z = 15;
+
+        // Optimized animation loop
+        let lastTime = 0;
+        const animate = (time) => {
+          requestAnimationFrame(animate);
+          
+          // Throttle updates on slower devices
+          if (time - lastTime > 16) { // ~60fps
+            lastTime = time;
+            
+            particles.forEach(particle => {
+              particle.rotation.x += 0.004;
+              particle.rotation.y += 0.006;
+              particle.position.y -= window.innerWidth > 768 ? 0.01 : 0.007;
+              if (particle.position.y < -10) particle.position.y = 10;
+            });
+
+            renderer.render(scene, camera);
+          }
+        };
+
+        animate(0);
+
+        // Debounced resize handler
+        let resizeTimeout;
+        const handleResize = () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+          }, 100);
+        };
+
+        window.addEventListener('resize', handleResize);
+        
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          renderer.dispose();
+        };
+      } catch (e) {
+        console.error("Three.js initialization failed:", e);
+        document.getElementById('three-container').style.display = 'none';
+      }
+    };
+
+    // Create diamond particles (optimized for all devices)
+    const createDiamondParticles = (x, y, count = 6) => {
+      // Adaptive particle count based on device capability
+      const particleCount = Math.min(
+        count,
+        window.innerWidth > 768 ? 8 : 
+        window.innerWidth > 480 ? 6 : 4
+      );
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'diamond-particle';
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        particle.style.transform = `scale(${Math.random() * 0.5 + 0.5})`;
+        particle.style.opacity = '0.8';
+        
+        document.body.appendChild(particle);
+        
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = window.innerWidth > 768 ? 
+          (1.5 + Math.random() * 2) : 
+          (1 + Math.random() * 1.5);
+        const lifetime = window.innerWidth > 768 ? 
+          (800 + Math.random() * 800) : 
+          (600 + Math.random() * 600);
+        const startTime = Date.now();
+        
+        const animateParticle = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = elapsed / lifetime;
+          
+          if (progress >= 1) {
+            particle.remove();
+            return;
+          }
+          
+          const currentX = x + Math.cos(angle) * velocity * elapsed * 0.04;
+          const currentY = y + Math.sin(angle) * velocity * elapsed * 0.04 - (elapsed * 0.04 * 0.5);
+          
+          particle.style.left = `${currentX}px`;
+          particle.style.top = `${currentY}px`;
+          particle.style.opacity = `${0.8 * (1 - progress)}`;
+          
+          requestAnimationFrame(animateParticle);
+        };
+        
+        requestAnimationFrame(animateParticle);
+      }
+    };
+
+    // React Components
+    const ProfileCard = () => {
+      const socialPlatforms = [
+        { 
+          icon: 'fab fa-linkedin', 
+          name: 'LinkedIn', 
+          description: 'Career Profile',
+          color: '#0077b5',
+          link: 'https://www.linkedin.com/in/aryan-aryal-arisksec/'
+        },
+        { 
+          icon: 'fab fa-github', 
+          name: 'GitHub', 
+          description: 'Code Repository',
+          color: '#333',
+          link: 'https://www.github.com/arisksec'
+        },
+        { 
+          icon: 'fa-brands fa-square-x-twitter', 
+          name: 'X (Twitter)', 
+          description: 'Social Media',
+          color: '#000000',
+          link: 'https://x.com/arisksec'
+        },
+        { 
+          icon: 'fas fa-globe', 
+          name: 'Website', 
+          description: 'Personal Portfolio',
+          color: '#666666',
+          link: 'https://aryanaryal.com.np'
+        }
+      ];
+
+      const handleCubeInteraction = (e, isTouch = false) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        if (!isTouch || window.innerWidth > 768) {
+          createDiamondParticles(centerX, centerY, 6);
+        }
+      };
+
+      return React.createElement(
+        'div',
+        { className: 'card-wrapper' },
+        React.createElement(
+          'div',
+          { className: 'luxury-card' },
+          React.createElement(
+            'div',
+            { className: 'card-header' },
+            React.createElement(
+              'div',
+              { className: 'diamond-avatar' },
+              React.createElement('img', { 
+                src: 'https://cdn.aryanaryal.com.np/626c6f672d617279616e/70686f746f73/6c6f676f73/black-logo.png',
+                alt: 'Profile',
+                loading: 'lazy',
+                decoding: 'async'
+              })
+            ),
+            React.createElement('h1', null, 'Aryan Aryal'),
+            React.createElement('p', null, 'Hacker')
+          ),
+          React.createElement(
+            'div',
+            { className: 'social-grid' },
+            socialPlatforms.map((platform, index) => 
+              React.createElement(
+                'a',
+                { 
+                  href: platform.link,
+                  target: '_blank',
+                  rel: 'noopener noreferrer',
+                  className: 'social-cube',
+                  key: index,
+                  onMouseEnter: (e) => handleCubeInteraction(e),
+                  onTouchStart: (e) => handleCubeInteraction(e, true)
+                },
+                ['front', 'back', 'right', 'left', 'top', 'bottom'].map(face => 
+                  React.createElement(
+                    'div',
+                    { 
+                      className: `social-face ${face}`,
+                      key: face,
+                      style: face === 'front' ? { 
+                        background: `linear-gradient(145deg, ${platform.color}30 0%, ${platform.color}10 100%)`,
+                        borderColor: platform.color
+                      } : null
+                    },
+                    React.createElement('i', { 
+                      className: platform.icon,
+                      style: { color: face === 'front' ? platform.color : 'inherit' }
+                    }),
+                    React.createElement('h3', null, platform.name),
+                    React.createElement('p', null, platform.description)
+                  )
+                )
+              )
+            )
+          )
+        )
+      );
+    };
+
+    const App = () => {
+      React.useEffect(() => {
+        const cleanup = initThreeJS();
+        return () => {
+          if (cleanup) cleanup();
+        };
+      }, []);
+      
+      return React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(ProfileCard, null)
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App, null));
+  </script>
+</body>
+</html>
